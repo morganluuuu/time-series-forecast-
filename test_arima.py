@@ -9,7 +9,6 @@ from scipy import stats
 from statsmodels.graphics.tsaplots import plot_acf
 from statsmodels.graphics.tsaplots import plot_pacf
 from statsmodels.tsa.stattools import adfuller as ADF
-from statsmodels.tsa.arima_model import ARIMA
 import pmdarima as pm
 
 
@@ -51,9 +50,8 @@ print('原始序列結果檢驗為:',ADF(df['value']))
 print('一次序列結果檢驗為:',ADF(df['diff_1'][1:].dropna()))
 print('二次序列結果檢驗為:',ADF(df['diff_2'][1:].dropna()))
 
-#%%目前找到最好(p,d,q)=(1,1,1)
-model=ARIMA(df['value'],order=(1,1,1)).fit()
-print(model.bic)
+#%%目前找到最好(p,d,q)=(0,1,0)
+print(df.head())
 # %%根據bic or aic 指定 p ,q 
 pmax=5
 qmax=5
@@ -67,7 +65,7 @@ for p in range(qmax+1):
             tmp.append(None)
     bic_matrix.append(tmp)
 bic_matrix =pd.DataFrame(bic_matrix)    
-#print(bic_matrix)
+print(bic_matrix)
 p,q=bic_matrix.stack().idxmin()
 print(p,q)
 
@@ -128,3 +126,5 @@ model = pm.auto_arima(df.value, start_p=1, start_q=1,
                       stepwise=True)
 
 print(model.summary())
+
+# %%
