@@ -20,6 +20,7 @@ x = np.cumsum(np.random.randn(n))
 
 # 把它转换成Pandas的DataFrame格式
 df = pd.DataFrame(x, columns=['value'])
+print(df)
 # %%
 plt.hist(df['value'])
 # %%
@@ -109,7 +110,7 @@ durbin_watson(arima_0_1_0.resid.values)
 #dw檢驗 接近2--正常; 靠近0--正自相關; 靠近4-- 負自相關
 
 
-# %% auto ariam 
+# %% apply auto ariam() for single time series 
 
 model = pm.auto_arima(df.value, start_p=1, start_q=1,
                       information_criterion='aic',
@@ -117,8 +118,7 @@ model = pm.auto_arima(df.value, start_p=1, start_q=1,
                       max_p=5, max_q=5, # maximum p and q
                       m=1,              # frequency of series
                       d=None,           # let model determine 'd'
-                      seasonal=False,   # No Seasonality
-                      start_P=0, 
+                      seasonal=False,   # No Seasonality 
                       D=0, 
                       trace=True,
                       error_action='ignore',  
@@ -127,4 +127,56 @@ model = pm.auto_arima(df.value, start_p=1, start_q=1,
 
 print(model.summary())
 
-# %%
+
+# %% mutiple time series with auto arima()
+import pandas as pd 
+def print_model_summaries(df, n_periods=1, seasonal=False):  # Set seasonal to False
+    # Iterate over columns in data
+    for group in df.columns:
+        if group == 'Date':
+            continue
+        # Fit an ARIMA model using the auto_arima function
+        data_actual = df[group].values
+        model = pm.auto_arima(data_actual, 
+                                  start_p=0, start_q=0,
+                                  max_p=12, max_q=12, # maximum p and q
+                                  information_criterion='aic',
+                                  test='adf',         # use adftest to find optimal 'd'
+                                  seasonal=seasonal,  # Set seasonal parameter
+                                  m=1,               # frequency of series
+                                  d=None,             # let model determine 'd'
+                                  D=None,             # let model determine 'D'
+                                  trace=True,         # To show the upper part of the model 
+                                  error_action='ignore',  
+                                  suppress_warnings=True, 
+                                  stepwise=True)
+        print(f"\nModel summary for {group}:")
+        print(model.summary())
+        print("\n")
+
+#%%
+import pandas as pd
+import numpy as np
+
+# Generate a date range for 12 months
+dates = pd.date_range(start='2023-01', periods=12, freq='MS')
+
+# Seed for reproducibility
+np.random.seed(42)
+
+# Generate random sales data for three products
+data = {
+    'Date': dates,
+    'Product_1': np.random.randint(100, 500, size=12),
+    'Product_2': np.random.randint(200, 600, size=12),
+    'Product_3': np.random.randint(300, 700, size=12)
+}
+
+# Create the DataFrame
+df = pd.DataFrame(data)
+
+print(df)
+
+#%%
+print_model_summaries(df)
+
